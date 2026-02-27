@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🤥 AI 言い訳ジェネレーター</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0d0d1a;
+      --card: #141428;
+      --card2: #1a1a35;
+      --border: #2a2a50;
+      --accent: #e94560;
+      --accent2: #f5a623;
+      --accent3: #4a9af5;
+      --text: #e0e0f0;
+      --muted: #888;
+      --green: #2ecc71;
+      --orange: #f39c12;
+      --red: #e74c3c;
+      --purple: #9b59b6;
+    }
+
+    body {
+      font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 60px;
+    }
+
+    /* ====== HEADER ====== */
+    .header {
+      background: linear-gradient(135deg, #0d0d1a 0%, #1a0a2e 50%, #0d1a2e 100%);
+      border-bottom: 2px solid var(--accent);
+      padding: 28px 20px 22px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(233,69,96,0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .header h1 {
+      font-size: clamp(1.6rem, 5vw, 2.6rem);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      background: linear-gradient(90deg, #e94560, #f5a623, #4a9af5, #e94560);
+      background-size: 300% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 4s linear infinite;
+    }
+    @keyframes shimmer {
+      0% { background-position: 0% center; }
+      100% { background-position: 300% center; }
+    }
+    .header-sub {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-top: 6px;
+    }
+    .header-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      margin-top: 12px;
+    }
+    .tag {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 3px 12px;
+      font-size: 0.72rem;
+      color: #bbb;
+    }
+
+    /* ====== LAYOUT ====== */
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+
+    /* ====== CARD ====== */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px;
+      margin-bottom: 18px;
+    }
+    .card-title {
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .card-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ====== INPUT FORM ====== */
+    .input-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 560px) {
+      .input-grid { grid-template-columns: 1fr; }
+    }
+    .input-group { display: flex; flex-direction: column; gap: 7px; }
+    .input-group label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+    .input-group select {
+      background: #0a0a18;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      padding: 10px 14px;
+      font-size: 0.92rem;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    .input-group select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(233,69,96,0.15);
+    }
+    .input-group select option { background: #141428; }
+
+    /* Level selector as pills */
+    .level-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .level-pill {
+      flex: 1 1 auto;
+      min-width: 0;
+      padding: 8px 6px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      background: #0a0a18;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.18s;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .level-pill:hover { border-color: #555; color: var(--text); }
+    .level-pill.active-0 { border-color: var(--green); color: var(--green); background: rgba(46,204,113,0.08); }
+    .level-pill.active-1 { border-color: var(--accent2); color: var(--accent2); background: rgba(245,166,35,0.08); }
+    .level-pill.active-2 { border-color: var(--red); color: var(--red); background: rgba(231,76,60,0.08); }
+    .level-pill.active-3 { border-color: var(--purple); color: var(--purple); background: rgba(155,89,182,0.1); }
+
+    /* Urgency slider */
+    .urgency-wrap { position: relative; }
+    .urgency-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: 5px;
+    }
+    input[type=range] {
+      width: 100%;
+      -webkit-appearance: none;
+      height: 6px;
+      border-radius: 3px;
+      background: linear-gradient(90deg, var(--green), var(--accent2), var(--red), var(--purple));
+      outline: none;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: white;
+      border: 3px solid var(--accent);
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+
+    /* Generate button */
+    .generate-btn {
+      width: 100%;
+      margin-top: 20px;
+      padding: 15px;
+      background: linear-gradient(135deg, #e94560, #c0392b);
+      border: none;
+      border-radius: 13px;
+      color: white;
+      font-size: 1.05rem;
+      font-weight: 800;
+      cursor: pointer;
+      letter-spacing: 0.08em;
+      transition: transform 0.1s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .generate-btn::before {
+      content: '';
+      position: absolute; top: 0; left: -100%;
+      width: 60%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      transition: left 0.5s;
+    }
+    .generate-btn:hover::before { left: 150%; }
+    .generate-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(233,69,96,0.45); }
+    .generate-btn:active { transform: translateY(0); }
+    .generate-btn.spinning { animation: btnPulse 0.5s; }
+    @keyframes btnPulse {
+      0%,100% { transform: scale(1); }
+      50% { transform: scale(0.97); }
+    }
+
+    /* ====== OUTPUT ====== */
+    .output-section { display: none; }
+    .output-section.visible {
+      display: block;
+      animation: fadeUp 0.45s ease forwards;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ====== EXCUSE TEXT ====== */
+    .excuse-box {
+      background: #09091a;
+      border-radius: 12px;
+      padding: 18px;
+      border-left: 4px solid var(--accent);
+      font-size: 1rem;
+      line-height: 1.85;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .copy-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .copy-btn {
+      padding: 8px 20px;
+      background: #252545;
+      border: 1.5px solid #3a3a65;
+      border-radius: 9px;
+      color: #a0a0f0;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 600;
+    }
+    .copy-btn:hover { background: #333360; color: white; }
+    .copy-btn.copied { background: #133322; border-color: #1a6644; color: #4aff9a; }
+    .badge {
+      font-size: 0.72rem;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 700;
+    }
+    .badge-green  { background: rgba(46,204,113,0.15); color: var(--green); border: 1px solid var(--green); }
+    .badge-orange { background: rgba(245,166,35,0.15); color: var(--accent2); border: 1px solid var(--accent2); }
+    .badge-red    { background: rgba(231,76,60,0.15); color: var(--red); border: 1px solid var(--red); }
+    .badge-purple { background: rgba(155,89,182,0.15); color: var(--purple); border: 1px solid var(--purple); }
+
+    /* ====== RISK METER ====== */
+    .risk-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .risk-pct {
+      font-size: 1.8rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+    .risk-bar-bg {
+      height: 14px;
+      background: #09091a;
+      border-radius: 7px;
+      overflow: hidden;
+      border: 1px solid #222244;
+    }
+    .risk-bar {
+      height: 100%;
+      border-radius: 7px;
+      transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1), background 1s;
+      position: relative;
+      overflow: hidden;
+    }
+    .risk-bar::after {
+      content: '';
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 50%;
+      background: rgba(255,255,255,0.1);
+      border-radius: 7px 7px 0 0;
+    }
+    .risk-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: 5px;
+    }
+    .risk-comment {
+      margin-top: 12px;
+      font-size: 0.88rem;
+      color: #aaa;
+      background: #09091a;
+      border-radius: 9px;
+      padding: 10px 14px;
+      border-left: 3px solid var(--accent3);
+    }
+    .risk-tips {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+    .risk-tip {
+      font-size: 0.72rem;
+      padding: 4px 11px;
+      border-radius: 20px;
+      background: #111130;
+      border: 1px solid #2a2a4e;
+      color: #9090c0;
+    }
+
+    /* ====== Q&A TABLE ====== */
+    .qa-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.87rem;
+    }
+    .qa-table th {
+      background: #09091a;
+      color: #7070a0;
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 700;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      border-bottom: 2px solid var(--border);
+    }
+    .qa-table td {
+      padding: 13px 12px;
+      border-bottom: 1px solid #111128;
+      vertical-align: top;
+      line-height: 1.55;
+    }
+    .qa-table tr:last-child td { border-bottom: none; }
+    .qa-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .qa-num { color: #444; font-size: 0.75rem; width: 28px; }
+    .tsukkomi-text {
+      color: var(--accent2);
+      position: relative;
+      padding-left: 4px;
+    }
+    .tsukkomi-text::before {
+      content: '「';
+      color: #665530;
+    }
+    .tsukkomi-text::after {
+      content: '」';
+      color: #665530;
+    }
+    .kaeshi-text { color: #7db4f5; }
+
+    /* ====== USAGE ALERT ====== */
+    .usage-alert {
+      border-radius: 14px;
+      padding: 15px 18px;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: flex-start;
+      gap: 13px;
+      border: 1.5px solid;
+    }
+    .usage-alert.safe   { background: #0a1a0a; border-color: #1a4a1a; }
+    .usage-alert.warn   { background: #1a1a0a; border-color: #4a4a1a; }
+    .usage-alert.danger { background: #1a0a0a; border-color: #4a1a1a; }
+    .usage-alert.legend { background: #1a0a1a; border-color: #4a1a4a; }
+    .alert-icon { font-size: 1.6rem; line-height: 1; flex-shrink: 0; margin-top: 1px; }
+    .alert-body strong { display: block; font-size: 0.88rem; margin-bottom: 3px; }
+    .alert-body span   { font-size: 0.82rem; color: #bbb; }
+
+    /* ====== SENSEI ====== */
+    .sensei-wrap {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      background: linear-gradient(135deg, var(--card), #12203a);
+      border: 1.5px solid #1a3a5a;
+      border-radius: 18px;
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+    .sensei-avatar {
+      font-size: 3.2rem;
+      line-height: 1;
+      flex-shrink: 0;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+    }
+    .sensei-right { flex: 1; min-width: 0; }
+    .sensei-name {
+      font-size: 0.7rem;
+      color: var(--accent3);
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .sensei-bubble {
+      background: #0a0a22;
+      border-radius: 13px;
+      padding: 14px 16px;
+      position: relative;
+      border: 1px solid #1a1a40;
+    }
+    .sensei-bubble::before {
+      content: '';
+      position: absolute;
+      left: -9px; top: 14px;
+      border-top: 8px solid transparent;
+      border-bottom: 8px solid transparent;
+      border-right: 9px solid #0a0a22;
+    }
+    .sensei-text {
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: #d0d0f0;
+    }
+
+    /* ====== SHARE ROW ====== */
+    .share-row {
+      text-align: center;
+      color: #555;
+      font-size: 0.78rem;
+      padding: 10px;
+      border-top: 1px solid var(--border);
+      margin-top: 8px;
+    }
+
+    /* ====== FOOTER ====== */
+    .footer {
+      text-align: center;
+      color: #444;
+      font-size: 0.75rem;
+      padding: 20px;
+      margin-top: 10px;
+    }
+
+    /* Scroll top btn */
+    .scroll-top {
+      position: fixed;
+      bottom: 20px; right: 20px;
+      width: 42px; height: 42px;
+      background: var(--accent);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px rgba(233,69,96,0.4);
+      z-index: 100;
+      transition: transform 0.2s;
+    }
+    .scroll-top:hover { transform: scale(1.1); }
+    .scroll-top.show { display: flex; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <h1>🤥 AI 言い訳ジェネレーター</h1>
+  <p class="header-sub">あなたの代わりに完璧な言い訳を生成します　※使用は自己責任で</p>
+  <div class="header-tags">
+    <span class="tag">📋 コピー可能</span>
+    <span class="tag">🎯 バレる可能性メーター</span>
+    <span class="tag">🥊 ツッコミ対策</span>
+    <span class="tag">🧙 言い訳先生</span>
+    <span class="tag">⚠️ 使い過ぎ注意</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- INPUT CARD -->
+  <div class="card">
+    <div class="card-title">🎛️ 設定</div>
+    <div class="input-grid">
+
+      <div class="input-group">
+        <label>📋 言い訳の種類</label>
+        <select id="sel-type">
+          <option value="遅刻">⏰ 遅刻</option>
+          <option value="締め切り">📅 締め切り遅延</option>
+          <option value="欠席">🏠 欠席・お休み</option>
+          <option value="キャンセル">❌ 約束キャンセル</option>
+          <option value="忘れ物">🎒 忘れ物・失念</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label>👤 言い訳する相手</label>
+        <select id="sel-recipient">
+          <option value="上司">👔 上司</option>
+          <option value="取引先">🤝 取引先・クライアント</option>
+          <option value="同僚">👥 同僚</option>
+          <option value="友人">👫 友人</option>
+          <option value="恋人">💕 恋人・パートナー</option>
+          <option value="家族">🏡 家族（親など）</option>
+          <option value="先生">📚 先生・教授</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label>🔥 緊急度</label>
+        <div class="urgency-wrap">
+          <input type="range" id="urgency" min="0" max="3" value="1"
+                 oninput="updateUrgencyLabel()">
+          <div class="urgency-labels">
+            <span>😌 余裕</span>
+            <span>😅 ちょいヤバ</span>
+            <span>😰 かなりヤバ</span>
+            <span>💀 詰んでる</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label>🎭 言い訳レベル</label>
+        <div class="level-pills">
+          <div class="level-pill active-0" id="lvl-0" onclick="setLevel(0)">✅ 正直系</div>
+          <div class="level-pill" id="lvl-1" onclick="setLevel(1)">🟡 ちょい盛</div>
+          <div class="level-pill" id="lvl-2" onclick="setLevel(2)">🔴 盛り盛</div>
+          <div class="level-pill" id="lvl-3" onclick="setLevel(3)">☠️ 創作</div>
+        </div>
+      </div>
+
+    </div>
+    <button class="generate-btn" id="genBtn" onclick="generate()">
+      ✨ 言い訳を生成する
+    </button>
+  </div>
+
+  <!-- OUTPUT SECTION -->
+  <div class="output-section" id="output">
+
+    <!-- Usage Alert -->
+    <div class="usage-alert safe" id="usageAlert">
+      <div class="alert-icon" id="alertIcon">✅</div>
+      <div class="alert-body">
+        <strong id="alertTitle">使用状況：問題なし</strong>
+        <span id="alertMsg">初回使用です。ご利用ありがとうございます。</span>
+      </div>
+    </div>
+
+    <!-- Excuse Text -->
+    <div class="card">
+      <div class="card-title">📝 生成された言い訳</div>
+      <div class="excuse-box" id="excuseText"></div>
+      <div class="copy-row">
+        <button class="copy-btn" id="copyBtn" onclick="copyExcuse()">📋 コピーする</button>
+        <span class="badge" id="levelBadge"></span>
+        <span class="badge" id="urgencyBadge"></span>
+      </div>
+    </div>
+
+    <!-- Risk Meter -->
+    <div class="card">
+      <div class="card-title">🎯 バレる可能性メーター</div>
+      <div class="risk-header">
+        <div>
+          <div class="risk-pct" id="riskPct">0%</div>
+          <div style="font-size:0.72rem; color: var(--muted); margin-top:3px;">バレる可能性</div>
+        </div>
+        <div id="riskEmoji" style="font-size:2.5rem;"></div>
+      </div>
+      <div class="risk-bar-bg">
+        <div class="risk-bar" id="riskBar" style="width:0%"></div>
+      </div>
+      <div class="risk-labels">
+        <span>🟢 安全圏</span>
+        <span>🟡 注意</span>
+        <span>🔴 危険</span>
+        <span>💀 即アウト</span>
+      </div>
+      <div class="risk-comment" id="riskComment"></div>
+      <div class="risk-tips" id="riskTips"></div>
+    </div>
+
+    <!-- Q&A Table -->
+    <div class="card">
+      <div class="card-title">🥊 想定ツッコミ ＆ 切り返し術</div>
+      <div style="overflow-x: auto;">
+        <table class="qa-table">
+          <thead>
+            <tr>
+              <th class="qa-num">#</th>
+              <th style="color: var(--accent2);">💬 相手からのツッコミ</th>
+              <th style="color: var(--accent3);">🛡️ あなたの切り返し</th>
+            </tr>
+          </thead>
+          <tbody id="qaBody"></tbody>
+        </table>
+      </div>
+      <div class="share-row">※ 切り返しは冷静に・笑顔で・語尾を柔らかく が鉄則</div>
+    </div>
+
+    <!-- Sensei -->
+    <div class="sensei-wrap">
+      <div class="sensei-avatar">🧙‍♂️</div>
+      <div class="sensei-right">
+        <div class="sensei-name">💡 言い訳先生より一言</div>
+        <div class="sensei-bubble">
+          <div class="sensei-text" id="senseiText"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Counter -->
+    <div class="footer" id="footerCount"></div>
+
+  </div>
+</div>
+
+<!-- Scroll Top -->
+<button class="scroll-top" id="scrollTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+/* =====================================================
+   DATA
+   ===================================================== */
+
+const LEVELS = ['正直系','ちょっと盛り','かなり盛り','フィクション級'];
+
+const DB = {
+  遅刻: {
+    上司: {
+      正直系: [
+        "申し訳ございません。電車が人身事故の影響で大幅に遅延しており、現在代替ルートで向かっております。〇〇分には到着できる見込みです。ご迷惑をおかけして大変恐縮でございます。",
+        "大変失礼いたします。出発直前に体調が悪くなり、少し休んでから向かわせていただきました。現在移動中です。もうまもなく到着いたします。"
+      ],
+      ちょっと盛り: [
+        "誠に申し訳ございません。最寄り駅の手前で電車が急停止し、乗客の方の体調不良への対応に居合わせてしまい、駅員さんに付き添うよう求められておりました。先ほど解放され、今まさに急いで向かっております。",
+        "大変遅れてしまい申し訳ございません。自宅を出た直後、近隣で交通事故が発生しており、警察官から目撃証言を求められておりました。今すぐ参ります。"
+      ],
+      かなり盛り: [
+        "誠に申し訳ございません。今朝、マンションのエレベーターが故障して閉じ込められてしまいまして、管理会社に連絡し解放していただいたところでございます。精神的に少し動揺しておりますが、すぐに参ります。",
+        "大変失礼いたしました。昨夜から軽い発熱があり、今朝病院を受診したところ「安静に」との指示でしたが、本日の業務を考えると参らざるを得ず、お医者様のご了解をいただいた上で向かっております。"
+      ],
+      フィクション級: [
+        "誠に恐れ入ります。今朝、玄関のドアノブが内側から完全に外れてしまい、業者を呼んで開錠していただくまでに2時間ほどかかってしまいました。このような珍事でご迷惑をおかけし、心よりお詫び申し上げます。"
+      ]
+    },
+    取引先: {
+      正直系: [
+        "大変申し訳ございません。交通機関の遅延により、予定時刻に間に合わない見通しとなりました。現在の見込みでは〇〇分頃到着の予定でございます。お時間を頂戴しており、誠に恐縮でございます。"
+      ],
+      ちょっと盛り: [
+        "誠に申し訳ございません。本日、主要路線が複数乱れており、あらゆるルートで遅延が発生しております。できる限り早く到着できるよう移動しておりますが、〇〇分頃になる見込みでございます。大変ご迷惑をおかけいたします。"
+      ],
+      かなり盛り: [
+        "大変恐縮でございます。本日朝より急な発熱があり医療機関を受診しておりましたが、本日の打ち合わせを何としても伺いたく、医師の了解のもと参っているところでございます。到着まで今しばらくお待ちいただけますでしょうか。"
+      ],
+      フィクション級: [
+        "誠に申し訳ございません。昨夜から急病の家族が出てしまい、今朝まで対応しておりました。状態が落ち着きましたので今まさに急いで参っているところでございます。このような状況でご迷惑をおかけし、心よりお詫び申し上げます。"
+      ]
+    },
+    同僚: {
+      正直系: ["ごめん、電車遅れてる。あと〇〇分くらいで着く。何かあれば連絡して。"],
+      ちょっと盛り: ["ごめんごめん！朝から電車が全然動かなくて、代替ルートでもダメで。今必死に向かってる！"],
+      かなり盛り: ["マジでごめん。朝起きたら頭痛がひどくて少し休んでた。今すっ飛んでいく！"],
+      フィクション級: ["ごめん！家出たら隣室の人が倒れてて、救急車呼んで付き添ってた。今解放されたとこ、急いでる！"]
+    },
+    友人: {
+      正直系: ["ごめん！電車乗り遅れた。あと〇〇分で着くから待ってて！"],
+      ちょっと盛り: ["ほんとごめん！駅でおじいさんが倒れてて、救急車呼んで付き合わされちゃって。今全力で向かってる！"],
+      かなり盛り: ["めっちゃごめん。朝から急にめまいがして、立てなくて。今は大丈夫！向かってる！"],
+      フィクション級: ["ほんとごめんなさい！隣の猫が脱走してて探してたら超時間かかった。猫無事見つかったから今行く！"]
+    },
+    恋人: {
+      正直系: ["ごめん、寝坊した。今すぐ行く。本当にごめん。"],
+      ちょっと盛り: ["ごめんね。昨日から体調がちょっとよくなくて、今朝しんどかったけど会いたいから来たよ！"],
+      かなり盛り: ["本当にごめん！電車でスリにあって財布がなくなって…警察に届けてたら時間かかっちゃった。でもちゃんと来た！"],
+      フィクション級: ["信じてくれるかな。今日マジでいろいろあって…。会ってから全部話すね。本当に申し訳なかった。"]
+    },
+    家族: {
+      正直系: ["ごめん、仕事が長引いてる。もうちょっとかかるから先食べてて。"],
+      ちょっと盛り: ["ごめんね、急ぎの会議が入って抜け出せなかった。急いで帰ってる！"],
+      かなり盛り: ["本当にごめん。職場でちょっとしたトラブルがあって対応してた。帰ってから話すね。"],
+      フィクション級: ["信じてくれるかわからないけど、電車が人身事故で止まって、代替バスも満員で乗れなくて歩いてたんだよ。"]
+    },
+    先生: {
+      正直系: ["先生、大変申し訳ございません。電車の遅延で遅刻してしまいました。遅延証明書をいただいてきましたので、後ほどご提出いたします。"],
+      ちょっと盛り: ["先生、申し訳ございません。朝から体調が優れず、少し休んでから登校してまいりました。"],
+      かなり盛り: ["先生、誠に申し訳ございません。電車内で急病の方が出て、居合わせた私に付き添うよう依頼がありました。救急隊員に引き渡した後、急いで参りました。"],
+      フィクション級: ["先生、大変恐縮ですが、自転車で来る途中にタイヤがパンクしてしまい、押して歩いてまいりました。このような時間になってしまい、大変申し訳ございません。"]
+    }
+  },
+
+  締め切り: {
+    上司: {
+      正直系: [
+        "大変申し訳ございません。想定以上に作業量が多く、現時点では完成しておりません。本日中に必ず完成させますので、提出が遅れることをご報告いたします。",
+      ],
+      ちょっと盛り: [
+        "誠に申し訳ございません。昨夜、ファイルの一部が破損してしまい、修復作業に予想以上の時間がかかってしまいました。現在最終段階ですので、本日〇〇時には必ずご提出いたします。"
+      ],
+      かなり盛り: [
+        "大変ご迷惑をおかけしております。昨夜から急な体調不良があり、作業を中断せざるを得ない状況でした。現在は回復し最終調整中です。本日〇〇時にはお届けできます。"
+      ],
+      フィクション級: [
+        "誠に申し訳ございません。昨夜、自宅で停電があり、保存前のデータが消えてしまうトラブルが発生いたしました。ほぼ復元でき、あと少しで完成です。本日中に必ずお届けします。"
+      ]
+    },
+    取引先: {
+      正直系: [
+        "誠に申し訳ございません。当初の想定以上に作業に時間を要しており、ご約束の期日に間に合わないことをご連絡させていただきます。〇〇日中には必ずお届けいたします。"
+      ],
+      ちょっと盛り: [
+        "大変ご迷惑をおかけしております。品質確保を最優先に進めておりますが、予期せぬ問題が発生し解消に時間がかかっております。〇〇日中には必ずご提出いたしますので、何卒ご了承いただけますと幸いです。"
+      ],
+      かなり盛り: [
+        "誠に申し訳ございません。担当者が急な体調不良により対応困難な状況となりましたが、チームでカバーしながら進めております。〇〇日まで猶予をいただけますでしょうか。"
+      ],
+      フィクション級: [
+        "誠に恐れ入ります。直前のご指摘を反映した最終版を準備しておりましたが、データ管理上の問題が発生し現在復旧対応中です。〇〇日まで延長いただけますと大変助かります。"
+      ]
+    },
+    同僚: {
+      正直系: ["ごめん、まだ終わってない。今夜中には仕上げるから。"],
+      ちょっと盛り: ["ごめん！思ったより複雑なところがあって時間かかってる。今日中には絶対出す！"],
+      かなり盛り: ["本当に申し訳ない。昨日他の案件が急に炎上して全然手が回らなかった。今夜徹夜でやる！"],
+      フィクション級: ["マジごめん。昨日のデータに問題があって確認してたら時間なくなった。今日中には絶対！"]
+    },
+    友人: {
+      正直系: ["ごめん！頼まれてたやつ、もう少し時間かかりそう。明日には絶対やる。"],
+      ちょっと盛り: ["ほんとごめん。昨日から体調がイマイチで全然集中できなかった。明日朝イチで送る！"],
+      かなり盛り: ["本当に申し訳ない！急な用事が重なって全然手が付けられなかった。今夜やって明日には送るね！"],
+      フィクション級: ["マジでごめん。PCが昨日クラッシュしてデータ復元に時間かかってて。なんとか復旧したから明日には絶対送る！"]
+    },
+    恋人: {
+      正直系: ["ごめん、忘れてた。本当にごめんね。今すぐやる！"],
+      ちょっと盛り: ["ごめんね。最近仕事でバタバタしてて、気が付いたら…。絶対今日中にやるから！"],
+      かなり盛り: ["本当にごめん！実は体調があまり良くなくて、でも心配かけたくなくて言えてなかったんだ。もう大丈夫、今すぐやる！"],
+      フィクション級: ["ほんとごめん。あなたのために完璧にしようとしてこだわりすぎてしまって。完成に近いからもう少しだけ待って？"]
+    },
+    家族: {
+      正直系: ["ごめん、頼まれてたこと忘れてた。今からやる！"],
+      ちょっと盛り: ["ごめんね！仕事が忙しくてすっかり後回しになってた。今日やるから！"],
+      かなり盛り: ["本当にごめん。最近残業続きで全然余裕がなくて。今週末には必ずやる！"],
+      フィクション級: ["ごめん！やろうと思ってたのに急に体調悪くなっちゃって。もう良くなったからすぐやるね！"]
+    },
+    先生: {
+      正直系: ["先生、申し訳ございません。期限に間に合いませんでした。本日中に提出させていただけますでしょうか。"],
+      ちょっと盛り: ["先生、昨日から体調を崩しており課題が完成しておりません。明日の授業前までに提出させていただくことは可能でしょうか。"],
+      かなり盛り: ["先生、家族の緊急事態があり対応に追われて課題を終えることができませんでした。今週中には必ず提出いたします。"],
+      フィクション級: ["先生、作業途中でPCが故障してしまいデータが失われてしまいました。復旧作業中ですが、もう数日お時間をいただけますと大変助かります。"]
+    }
+  },
+
+  欠席: {
+    上司: {
+      正直系: [
+        "大変申し訳ございませんが、本日体調不良のため欠勤させていただきたく存じます。引継ぎが必要な業務がございましたら、ご連絡いただけますでしょうか。"
+      ],
+      ちょっと盛り: [
+        "誠に恐れ入りますが、昨夜から38度を超える発熱があり、本日は医療機関を受診しながら休養させていただきたく思います。ご迷惑をおかけして大変申し訳ございません。"
+      ],
+      かなり盛り: [
+        "大変申し訳ございません。昨夜から激しい嘔吐・下痢の症状があり、脱水症状が心配なため本日は欠勤させてください。急いで病院に参ります。回復次第、ご報告いたします。"
+      ],
+      フィクション級: [
+        "誠に申し訳ございません。昨夜、家族が急病で救急搬送される事態となりまして、今も病院におります。本日はお休みをいただけますでしょうか。状況が落ち着き次第ご連絡いたします。"
+      ]
+    },
+    取引先: {
+      正直系: [
+        "誠に申し訳ございませんが、本日体調不良により参加が困難な状況です。代わりの者を出席させるか、日程を変更させていただくことは可能でしょうか。"
+      ],
+      ちょっと盛り: [
+        "大変恐縮ですが、本日朝より発熱があり、感染防止の観点からも貴社にお邪魔することが難しい状況です。オンライン参加等での代替対応はいかがでしょうか。"
+      ],
+      かなり盛り: [
+        "誠に申し訳ございません。昨夜より高熱が続いており、医師から外出を止められております。日程のご調整をいただけますと大変助かります。"
+      ],
+      フィクション級: [
+        "大変なご迷惑をおかけして誠に申し訳ございません。家族の緊急入院があり、現在病院に付き添っております。状況が落ち着きましたら早急にご連絡いたします。"
+      ]
+    },
+    同僚: {
+      正直系: ["今日休む。体調が悪くて。ごめん。何か急ぎがあれば連絡して。"],
+      ちょっと盛り: ["ごめん、今日熱があって休みます。急ぎの案件あれば連絡してね！"],
+      かなり盛り: ["本当に申し訳ないけど今日休む。昨日から具合が悪くて今朝一気に悪化した。緊急案件あれば教えて。"],
+      フィクション級: ["マジごめん！急な家庭の事情でどうしても今日休まないといけなくなった。詳しくは言えないけど、緊急なら電話して。"]
+    },
+    友人: {
+      正直系: ["ごめん！今日行けなくなった。体調が…。また絶対誘ってね！"],
+      ちょっと盛り: ["本当にごめん！昨夜から熱が出てて今日は動けそうにない。絶対埋め合わせする！"],
+      かなり盛り: ["マジでごめん！急に家の都合で行けなくなっちゃった。詳しくは後で話すね。楽しみにしてたのに…。"],
+      フィクション級: ["本当に本当にごめんね！信じてくれないかもしれないけど本当に仕方ない事情があって。次回は絶対行く！"]
+    },
+    恋人: {
+      正直系: ["ごめん、今日行けなくなった。体調が悪くて。本当にごめんね。"],
+      ちょっと盛り: ["ごめんね。今日めっちゃ楽しみにしてたんだけど朝から熱が…。心配かけたくなかったけど言わないとって思って。"],
+      かなり盛り: ["本当にごめん。実は昨日から体調が悪かったけど大丈夫だと思ってて。今朝起きたら全然無理で。会いたかったのに…。"],
+      フィクション級: ["ごめん、今日どうしても外せない用事ができてしまって…。内容が話せないのが申し訳ないけど、絶対に変な理由じゃないから信じてほしい。"]
+    },
+    家族: {
+      正直系: ["ごめん、今日は行けない。仕事が入っちゃった。"],
+      ちょっと盛り: ["ごめんね、体調が悪くて。無理して行くよりゆっくり休む方がいいと思って。"],
+      かなり盛り: ["本当にごめんね。急に仕事の緊急対応が入ってしまって、どうしても抜けられないんだ。"],
+      フィクション級: ["ごめんね。友達がちょっと大変なことになっていて、付き添ってあげないといけなくて…。"]
+    },
+    先生: {
+      正直系: ["先生、本日体調不良のため欠席いたします。大変申し訳ございません。"],
+      ちょっと盛り: ["先生、昨夜から発熱があり、本日の授業を欠席させていただきます。回復次第、遅れた分を取り戻せるよう努めます。"],
+      かなり盛り: ["先生、家族に緊急事態が発生し、本日どうしても出席できない状況です。大変申し訳ございません。"],
+      フィクション級: ["先生、急病で病院を受診する必要があり欠席させていただきます。後ほど診断書をご提出いたします。"]
+    }
+  },
+
+  キャンセル: {
+    上司: {
+      正直系: ["誠に申し訳ございません。本日予定しておりました件について、急遽日程のご変更をお願いできますでしょうか。"],
+      ちょっと盛り: ["大変恐縮ですが、急な体調不良により本日の予定に参加することが難しい状況です。日程の再調整をお願いできますでしょうか。"],
+      かなり盛り: ["誠に申し訳ございません。昨日から体調が悪化しており、本日の予定参加が困難です。改めて日程を組み直させていただけますでしょうか。"],
+      フィクション級: ["大変申し訳ございません。家族に緊急事態が起きており、今日はどうしても対応が必要な状況です。改めて日程を調整させていただけますでしょうか。"]
+    },
+    取引先: {
+      正直系: ["誠に申し訳ございません。本日の予定について急遽変更のお願いをしなければならない状況となりました。改めて日程を調整させていただけますでしょうか。"],
+      ちょっと盛り: ["大変ご迷惑をおかけいたします。担当者の急な体調不良により、本日の打ち合わせの日程変更をお願いしたいのですが、いかがでしょうか。"],
+      かなり盛り: ["誠に恐れ入りますが、社内で急なトラブルが発生し本日の予定参加が困難となってしまいました。大変なご迷惑をおかけして申し訳ございません。"],
+      フィクション級: ["大変恐縮ではございますが、弊社システムの緊急障害対応が入ってしまい、本日の予定への参加が困難な状況です。改めて日程調整させていただけますでしょうか。"]
+    },
+    同僚: {
+      正直系: ["ごめん、今日の飲み会行けなくなった。また次回！"],
+      ちょっと盛り: ["ごめん！急に体調が悪くなって。楽しみにしてたのに残念。また誘ってね！"],
+      かなり盛り: ["本当にごめん！急な用事が入っちゃって。みんなに謝っておいて。次は絶対参加する！"],
+      フィクション級: ["マジでごめん！家でちょっとした緊急事態があって今日は無理。詳しくは今度話す！"]
+    },
+    友人: {
+      正直系: ["ごめん！今日どうしても行けなくなった。また絶対誘って！"],
+      ちょっと盛り: ["本当にごめん！急に体調が悪くなっちゃって行ける状態じゃない。絶対埋め合わせする！"],
+      かなり盛り: ["マジでごめん！急に家の用事が入っちゃって。本当に楽しみにしてたんだけど…。次回は絶対行く！"],
+      フィクション級: ["本当にごめんなさい！今すごく大変な状況で…詳しくは後で話すね。埋め合わせは絶対するから！"]
+    },
+    恋人: {
+      正直系: ["ごめんね、今日キャンセルしてもいい？なんか気持ちが乗らなくて。正直に言ってごめん。"],
+      ちょっと盛り: ["ごめん！急に体調が悪くなってしまって。せっかく楽しみにしてたのに本当にごめんね。"],
+      かなり盛り: ["本当にごめんね。急に友達から緊急のSOSが来て、無視できなくて…。あなたとの時間も大切だけど、本当に困ってそうで。"],
+      フィクション級: ["ごめんね、今日ちょっと難しくなってしまって。全部説明するのが難しいんだけど、絶対変な理由じゃないから信じてほしい。"]
+    },
+    家族: {
+      正直系: ["ごめん、今日やっぱり行けない。仕事が入った。"],
+      ちょっと盛り: ["ごめんね、急に体調が…。無理して行くよりゆっくり休む。また誘ってね。"],
+      かなり盛り: ["本当にごめん！仕事の緊急対応が入ってしまって。本当に楽しみにしてたのに。"],
+      フィクション級: ["ごめんね、今日どうしても外せない用事ができてしまって。また絶対行くから！"]
+    },
+    先生: {
+      正直系: ["先生、本日の面談を変更していただけますでしょうか。大変申し訳ございません。"],
+      ちょっと盛り: ["先生、急な体調不良により本日の予定を変更させていただきたいのですが、いかがでしょうか。"],
+      かなり盛り: ["先生、大変恐縮ですが家族の緊急事態があり本日の予定への参加が困難です。改めてご相談させていただけますでしょうか。"],
+      フィクション級: ["先生、誠に申し訳ありませんが急病のため本日はお伺いすることができません。後日改めてお時間をいただけますでしょうか。"]
+    }
+  },
+
+  忘れ物: {
+    上司: {
+      正直系: ["大変申し訳ございません。本日〇〇を持参するのを失念してしまいました。データでの共有などで対応させていただけますでしょうか。"],
+      ちょっと盛り: ["誠に申し訳ございません。昨夜遅くまで作業しており朝の準備が万全でなく、〇〇を忘れてきてしまいました。すぐに解決策を考えます。"],
+      かなり盛り: ["大変失礼いたしました。急いで出社したため〇〇を持参するのを忘れてしまいました。自宅に連絡してデータを送ってもらう手配をします。"],
+      フィクション級: ["誠に申し訳ございません。朝の通勤中に鞄のファスナーが壊れ、別の袋に移す際に〇〇だけ入れ忘れてしまいました。すぐに対応策を考えます。"]
+    },
+    取引先: {
+      正直系: ["誠に申し訳ございません。本日お持ちするはずだった〇〇を忘れてしまいました。速やかにデータでお送りするか改めてお持ちするかで対応させていただきます。"],
+      ちょっと盛り: ["大変失礼いたしました。移動中の混雑で荷物が乱れてしまい〇〇が入っていないことに気づきました。すぐにデータをお送りいたします。"],
+      かなり盛り: ["誠に恐れ入ります。昨夜最終確認したのですが、朝の混雑した電車内で鞄から落としてしまったようです。まずデータでのご対応をさせていただきます。"],
+      フィクション級: ["大変申し訳ございません。最新版と旧版を別フォルダで管理しており、誤って旧バージョンのみ持参してしまいました。正しいデータをすぐにお送りいたします。"]
+    },
+    同僚: {
+      正直系: ["ごめん、〇〇忘れた。データ送るね。"],
+      ちょっと盛り: ["やっちゃった！〇〇忘れてきた。今すぐ代替手段考える！"],
+      かなり盛り: ["ごめん！昨日遅くまで仕事して疲れてて朝ぼーっとしてたら忘れた。今すぐなんとかする！"],
+      フィクション級: ["マジか！入れた記憶あるのに鞄に入ってない。電車で落としたかも。とりあえず代替対応するね！"]
+    },
+    友人: {
+      正直系: ["ごめん！〇〇忘れた。取りに戻ろうか？"],
+      ちょっと盛り: ["ごめんごめん！昨日バタバタしてて完全に忘れてた。今すぐ何とかするね！"],
+      かなり盛り: ["マジでごめん！ちゃんと準備してたんだけど朝バタバタしてて持ってくるの忘れた。どうしよう？"],
+      フィクション級: ["信じて！ちゃんと用意してたんだよ！なんで家に置いてきちゃったんだろう。本当にごめん！"]
+    },
+    恋人: {
+      正直系: ["ごめん、〇〇忘れた！どうしよう？"],
+      ちょっと盛り: ["ごめんね！昨夜ちゃんと用意したつもりだったのに朝の慌ただしさで忘れてきちゃった。"],
+      かなり盛り: ["本当にごめん！あなたに渡すことを考えてたら他のことが頭から抜けちゃって。あなたのせいだよ（笑）"],
+      フィクション級: ["ごめんね、あなたのこと考えすぎてたら他のことが全部飛んじゃった。これほんとのことだよ。"]
+    },
+    家族: {
+      正直系: ["ごめん、〇〇忘れた。後で取ってくるね。"],
+      ちょっと盛り: ["ごめんね！慌てて出たから忘れちゃった。後で取りに来るね。"],
+      かなり盛り: ["本当にごめん！最近疲れてて色々忘れっぽくなってる。ちゃんとするね。"],
+      フィクション級: ["マジでごめん！絶対持った記憶があるのにどこで落としたんだろう。一回家確認してみていい？"]
+    },
+    先生: {
+      正直系: ["先生、本日〇〇を忘れてしまいました。大変申し訳ございません。明日必ず持参します。"],
+      ちょっと盛り: ["先生、今日〇〇を忘れてきてしまいました。準備はしていたのですが朝の慌ただしさで…。明日必ずお持ちします。"],
+      かなり盛り: ["先生、〇〇を家に忘れてきてしまいました。昨夜準備したのですが朝体調がすぐれなく確認が不十分でした。明日には必ずお持ちします。"],
+      フィクション級: ["先生、昨日〇〇を完成させて鞄に入れたのですが、朝犬が鞄をひっくり返してしまい一部なくしてしまいました。再作成してお持ちします。"]
+    }
+  }
+};
+
+/* =====================================================
+   Q&A DATA
+   ===================================================== */
+const QA = {
+  遅刻: {
+    上司: [
+      { t: "なぜもっと早く連絡しなかったのですか？", k: "確認してからご連絡しようという判断が遅れてしまいました。以後は発生した時点で即座にご連絡するよう改めます。" },
+      { t: "遅延証明書はありますか？", k: "はい、後ほどご提出いたします（電車遅延の場合は必ず取得を。他の場合は「書類として準備します」と一呼吸）。" },
+      { t: "今後また同じことになりませんか？", k: "おっしゃる通りです。今後は出発時間を15分前倒しに設定し、余裕を持って行動いたします。" },
+      { t: "今日は重要な会議があったのに？", k: "はい、それは重々承知しておりました。だからこそ、このような形になり大変申し訳ございません。誠意を持って対応いたします。" }
+    ],
+    取引先: [
+      { t: "弊社の時間も大切にしていただけますか？", k: "まさにおっしゃる通りでございます。今後はこのようなことがないよう、時間管理を徹底いたします。" },
+      { t: "事前にご連絡いただけなかったのでしょうか？", k: "ご連絡が遅れてしまい、重ね重ねお詫び申し上げます。状況が判明した時点でご連絡すべきでした。" },
+      { t: "これが続くようですと…", k: "おっしゃる通りでございます。今回限りとなるよう仕組みを見直します。ご信頼に応えられるよう努めます。" }
+    ],
+    同僚: [
+      { t: "上司が探してたよ", k: "マジか！今すぐ連絡する。教えてくれてありがとう！" },
+      { t: "えっ、まじ？今日やばくない？", k: "ほんとごめん！何か急ぎのやつある？今から全力で対応する！" }
+    ],
+    友人: [
+      { t: "またかよ〜！", k: "ほんとごめんて！今回は本当に仕方なかった。次は絶対ちゃんとする！" },
+      { t: "どうせ寝坊でしょ？", k: "（心の声：正解）…違うよ！本当に電車が遅れたんだって！（真顔）" },
+      { t: "待ってる間することなくて暇だったんだけど", k: "ごめんごめん！次は飲み物代出すから許して！" }
+    ],
+    恋人: [
+      { t: "私のことどう思ってるの？", k: "すごく大切に思ってるよ。だから余計に申し訳ない。本当にごめん。" },
+      { t: "毎回こうだよね…", k: "本当にそう思う、改める。具体的に出発時間を20分早めることにする。" },
+      { t: "待ってる間めっちゃ不安だったんだけど", k: "ごめんね。連絡が遅れて本当に申し訳なかった。次からはすぐ連絡する。" }
+    ],
+    家族: [
+      { t: "ご飯冷めちゃったじゃない", k: "ごめん！レンジで温め直す。本当にごめんね。" },
+      { t: "連絡くらいしてよ", k: "ほんとそうだね。ごめん、次からはちゃんとする。" }
+    ],
+    先生: [
+      { t: "遅延証明書はありますか？", k: "はい、駅でいただいてきましたのでお持ちしております（必ず取得しましょう）。" },
+      { t: "次回は気をつけてください", k: "はい、以後は余裕を持って登校するよう努めます。大変申し訳ございませんでした。" }
+    ]
+  },
+  締め切り: {
+    上司: [
+      { t: "これは何日も前から分かっていたことですよね？", k: "おっしゃる通りで、進捗管理が甘かったことを深く反省しております。" },
+      { t: "いつ完成するか、具体的に教えてください", k: "本日〇〇時には必ずお届けします。間に合わない場合はその時点でご連絡いたします。" },
+      { t: "なぜ早めに相談してくれなかったの？", k: "なんとかなると思っていた判断が甘かったです。以後は早めにご相談するよう心がけます。" },
+      { t: "他の仕事への影響は？", k: "この件を最優先にすることで、他の業務への影響は最小限に抑えます。" }
+    ],
+    取引先: [
+      { t: "今後のスケジュールへの影響は？", k: "今週中にはお届けし、以降の工程に影響が出ないよう尽力いたします。" },
+      { t: "信頼に関わりますよ", k: "まさにその通りでございます。今回の件を重く受け止め、必ず挽回いたします。" }
+    ],
+    同僚: [
+      { t: "え、まだ？大丈夫？", k: "ごめん！今夜やる。本当に今夜！（真剣な顔で）" },
+      { t: "俺のとこにも影響あるんだけど", k: "ごめん本当に！今すぐ確認して対応する！何が必要？" }
+    ],
+    友人: [
+      { t: "え、あれどうなった？", k: "ごめん！まだなんだよ。明日には絶対！" },
+      { t: "催促するの気まずかったんだけど", k: "ほんとごめん！言ってよかったのに。明日には絶対やる！" }
+    ],
+    恋人: [
+      { t: "ずっと待ってたんだけど", k: "ごめん、本当に申し訳なかった。今すぐやる！" },
+      { t: "大事じゃなかったの？", k: "大事だよ！それは絶対。ただ時間の管理が甘かった。本当にごめんね。" }
+    ],
+    家族: [
+      { t: "いつやるの？", k: "今日！今から始める！（スマホをしまいながら）" }
+    ],
+    先生: [
+      { t: "減点になりますが、それでもいいですか？", k: "はい、それは仕方ないと思っております。本日中には必ず提出いたします。" },
+      { t: "理由を聞かせてもらえますか？", k: "（事前に準備した理由を誠実に伝える）大変申し訳ございませんでした。" }
+    ]
+  },
+  欠席: {
+    上司: [
+      { t: "今日の案件はどうするの？", k: "〇〇さんにバトンタッチをお願いしております。資料はすべてデータで共有済みです。" },
+      { t: "いつ頃出社できそう？", k: "明日には必ず出社できると思います。状況が変わりましたらすぐにご連絡いたします。" },
+      { t: "病院には行きましたか？", k: "はい、今から行くところです。診断書が必要であればいただいてきます。" }
+    ],
+    取引先: [
+      { t: "代わりの方はいらっしゃいますか？", k: "はい、〇〇が代わりに参ります。もしくはオンラインでの対応も可能です。" },
+      { t: "今後の日程はどうなりますか？", k: "今週中に改めて日程を調整させていただきます。ご迷惑をおかけして申し訳ございません。" }
+    ],
+    同僚: [
+      { t: "大丈夫？何かあった？", k: "うん、まあちょっとね。心配ありがとう。明日には絶対行く！" },
+      { t: "例の件どうすればいい？", k: "それはAさんに頼んであるから大丈夫なはず。何かあれば連絡してね！" }
+    ],
+    友人: [
+      { t: "え！楽しみにしてたのに！", k: "本当にごめん。私も楽しみにしてたよ。次回は絶対行く！" },
+      { t: "もしかして嫌いになった？", k: "そんなことない！ほんとに体調が…。信じて！（目に涙）" }
+    ],
+    恋人: [
+      { t: "大丈夫？心配なんだけど", k: "ありがとう。でも大丈夫だよ。心配してくれてありがとうね。" },
+      { t: "正直に教えてくれなきゃ嫌だ", k: "本当のことだよ。嘘ついてない。証拠に今から病院行ったら連絡するね。" }
+    ],
+    家族: [
+      { t: "本当に大丈夫？", k: "うん、大丈夫。ゆっくり休めば治るから心配しないで。" }
+    ],
+    先生: [
+      { t: "欠席届を出してください", k: "はい、後ほど保護者に書いてもらいます。" },
+      { t: "補講が必要になりますね", k: "はい、ご対応いただけると大変助かります。よろしくお願いいたします。" }
+    ]
+  },
+  キャンセル: {
+    上司: [
+      { t: "これは重要な予定でしたよね？", k: "はい、重要だと認識しております。改めて日程をご調整いただけますでしょうか。" },
+      { t: "また同じことにならないように", k: "はい、今後はこのようなことがないよう気をつけます。誠に申し訳ございませんでした。" }
+    ],
+    取引先: [
+      { t: "弊社側の準備はすべて整っていたのですが", k: "誠に申し訳ございません。ご準備いただいていたにもかかわらず、大変失礼いたしました。" },
+      { t: "次回の日程はいつ頃可能ですか？", k: "今週中に候補日をいくつかお送りいたします。ご都合の良い日時をお知らせください。" }
+    ],
+    同僚: [
+      { t: "えー！楽しみにしてたのに！", k: "ほんとごめん！次は絶対行く！絶対キャンセルしない！" },
+      { t: "本当の理由教えて", k: "（ここは腹をくくって本当のことを言うか、巧みにかわすか）本当なんだよ…信じて。" }
+    ],
+    友人: [
+      { t: "えー！楽しみにしてたのに！", k: "ほんとごめん！次は絶対行く！" },
+      { t: "本当の理由は？", k: "（にっこり笑って）本当のことだよ。信じてくれると嬉しいな…。" }
+    ],
+    恋人: [
+      { t: "私より大事なことがあるってこと？", k: "そんなことない！あなたが一番大事。でも本当に仕方なかったんだ。" },
+      { t: "最近こういうの多くない？", k: "そう感じてるんだね。ちゃんと向き合う。今度は必ず優先する。" }
+    ],
+    家族: [
+      { t: "みんな楽しみにしてたのに", k: "本当にごめん！お詫びに次回はご飯おごるから！" }
+    ],
+    先生: [
+      { t: "いつなら来られますか？", k: "今週の〇曜日はいかがでしょうか。先生のご都合に合わせますので教えていただけますでしょうか。" }
+    ]
+  },
+  忘れ物: {
+    上司: [
+      { t: "これがないと会議が進められませんよ？", k: "申し訳ございません。すぐにデータで共有するか、取りに戻るかで対応いたします。" },
+      { t: "事前確認はしましたか？", k: "確認が不十分でした。今後はチェックリストを使って確認するよう改めます。" }
+    ],
+    取引先: [
+      { t: "本日のためにご準備いただいていたのですが…", k: "誠に申し訳ございません。すぐにデータでお送りするか、改めてご持参するか、どちらがよろしいでしょうか？" }
+    ],
+    同僚: [
+      { t: "それないとどうにもならなくない？", k: "ごめん！今すぐ代替案考える。データで何とかなる？" }
+    ],
+    友人: [
+      { t: "えー！それがないとダメじゃん！", k: "ごめん！どうにかならないかな？一緒に考えて！" },
+      { t: "ちゃんと確認してよ〜", k: "本当にそうだね。ごめんね。次は絶対確認する！" }
+    ],
+    恋人: [
+      { t: "せっかく楽しみにしてたのに", k: "ごめんね。でもそれがなくても一緒にいられるだけで嬉しいよ。（完璧なフォロー）" }
+    ],
+    家族: [
+      { t: "しっかりしてよ…", k: "ほんとごめん。ちゃんとする。今度から前日に確認するリスト作る。" }
+    ],
+    先生: [
+      { t: "明日必ず持ってきてください", k: "はい、明日必ずお持ちします。大変申し訳ございませんでした。" }
+    ]
+  }
+};
+
+/* =====================================================
+   SENSEI MESSAGES
+   ===================================================== */
+const SENSEI = {
+  正直系: [
+    "正直な言い訳は一番安全じゃが、正直すぎると「言い訳」ではなく「告白」になってしまうぞ。少しの演出が大切じゃ。",
+    "正直系とはいえ、声のトーン・表情・タイミングが命じゃ。「本当に寝坊しました」は清々しすぎて逆に疑われることもある。",
+    "正直が最善の言い訳。でも過剰に謝り過ぎると、かえって相手の怒りを煽ることもある。一度しっかり謝ったらあとは前向きにいくのが鉄則じゃ。"
+  ],
+  ちょっと盛り: [
+    "このレベルが最も使い勝手が良い。料理の塩加減と同じで、少し足すだけで味わいが増すが、入れすぎると台無しじゃ。",
+    "ちょっと盛りは社会の潤滑油。上手に使えれば人間関係をスムーズにしてくれる。使いすぎなければ問題ない。",
+    "このくらいの言い訳は追及されても切り返せる余裕がある。冷静さと笑顔を忘れずに。"
+  ],
+  かなり盛り: [
+    "お前さん、なかなか肝が据わっておる。しかし詳細を問われた時の準備は万全かな？",
+    "盛り過ぎた言い訳は雪だるまのようなもの。どんどん大きくなって最後は自分で支えられなくなるぞ。ストーリーの一貫性が命じゃ。",
+    "このレベルになると矛盾が命取り。相手の次の質問まで読んで、事前にシナリオを組んでおくのが賢明じゃ。"
+  ],
+  フィクション級: [
+    "…よく来た。言い訳の深淵へようこそ。引き返せるうちに引き返すことをお勧めするが、それがお前の選択なら止めはしない。",
+    "フィクション級は諸刃の剣じゃ。見事に決まれば英雄、バレれば永遠に語り草になるぞ。覚悟はよいか？",
+    "ここまで来ると最早芸術の域じゃ。でもな、素直に謝るのが一番楽なんじゃよ。これが長年の教えじゃ。"
+  ]
+};
+
+/* =====================================================
+   RISK CONFIG
+   ===================================================== */
+const RISK = {
+  正直系:     { base: 12, comment: "正直ベースなので追及されても基本的に問題なし。声のトーンと表情を整えるだけで十分。", tips: ["遅延証明書は必ず取得", "謝罪は簡潔に1回", "前向きな改善策を添える"], emoji: "🟢" },
+  ちょっと盛り: { base: 35, comment: "少し盛ってはいるが、ツッコまれても切り返せる範囲。慌てないことが大切。", tips: ["追及されたら「詳しくはまた」と逃げる", "表情を暗くしすぎない", "余計なことを喋らない"], emoji: "🟡" },
+  かなり盛り:  { base: 64, comment: "詳細を問われると危険ゾーン。ストーリーの一貫性と事前シナリオ準備が必須。", tips: ["矛盾が出たら素直に謝る準備を", "第三者を巻き込まない", "時間が経つほどボロが出やすい"], emoji: "🟠" },
+  フィクション級: { base: 87, comment: "高リスク。整合性の穴が多く、時間が経つほどバレやすい。本当に必要な時だけ使用すること。", tips: ["証拠が残らないよう注意", "話した内容を必ずメモ", "潔く謝る選択肢も常に持っておく"], emoji: "🔴" }
+};
+
+const URGENCY_MOD = [0, 8, 18, 30];
+
+/* =====================================================
+   STATE
+   ===================================================== */
+let currentLevel = 1; // index into LEVELS
+
+function setLevel(idx) {
+  currentLevel = idx;
+  [0,1,2,3].forEach(i => {
+    const el = document.getElementById('lvl-' + i);
+    el.className = 'level-pill' + (i === idx ? ' active-' + i : '');
+  });
+}
+
+function updateUrgencyLabel() {
+  // slider thumb color update (visual only)
+}
+
+/* =====================================================
+   USAGE TRACKING
+   ===================================================== */
+function getCount() { return parseInt(localStorage.getItem('iiwake_cnt') || '0'); }
+function incCount() {
+  const n = getCount() + 1;
+  localStorage.setItem('iiwake_cnt', n);
+  return n;
+}
+function getAlertData(n) {
+  if (n <= 3)  return { cls: 'safe',   icon: '✅', title: `使用回数 ${n} 回 ─ 問題なし`,      msg: '健全な使用状況です。上手に活用してください。' };
+  if (n <= 8)  return { cls: 'warn',   icon: '⚠️', title: `使用回数 ${n} 回 ─ そろそろ注意`,   msg: '同じ相手への使い回しは危険！バリエーションをつけましょう。' };
+  if (n <= 15) return { cls: 'danger', icon: '🚨', title: `使用回数 ${n} 回 ─ 危険域に突入！`,  msg: '使いすぎ警報！そろそろ言い訳力より問題解決力を磨く時期かもしれません。' };
+  return          { cls: 'legend', icon: '💀', title: `使用回数 ${n} 回 ─ 言い訳マスター爆誕`, msg: '称号「言い訳の達人」を授けよう。でも本当に正直に生きる方が楽だぞ…（先生の言葉）' };
+}
+
+/* =====================================================
+   GENERATE
+   ===================================================== */
+function generate() {
+  const type      = document.getElementById('sel-type').value;
+  const recipient = document.getElementById('sel-recipient').value;
+  const urgency   = parseInt(document.getElementById('urgency').value);
+  const level     = LEVELS[currentLevel];
+
+  // --- Excuse text ---
+  const typeDB = DB[type] || {};
+  const recDB  = typeDB[recipient] || typeDB[Object.keys(typeDB)[0]] || {};
+  const lvlArr = recDB[level] || recDB[Object.keys(recDB)[0]] || ["申し訳ございません。やむを得ない事情がございました。"];
+  const excuse = lvlArr[Math.floor(Math.random() * lvlArr.length)];
+
+  // --- Risk ---
+  const riskCfg = RISK[level];
+  const rawRisk = riskCfg.base + URGENCY_MOD[urgency] + (Math.random() * 8 - 4);
+  const risk    = Math.min(99, Math.max(3, Math.round(rawRisk)));
+  const riskColor = risk < 30 ? '#2ecc71' : risk < 55 ? '#f39c12' : risk < 78 ? '#e74c3c' : '#9b59b6';
+
+  // --- Q&A ---
+  const typeQA = QA[type]      || {};
+  const recQA  = typeQA[recipient] || typeQA[Object.keys(typeQA)[0]] || [];
+
+  // --- Sensei ---
+  const msgs    = SENSEI[level];
+  const sensei  = msgs[Math.floor(Math.random() * msgs.length)];
+
+  // --- Usage ---
+  const cnt     = incCount();
+  const alert   = getAlertData(cnt);
+
+  // ---- UPDATE DOM ----
+
+  // Usage alert
+  const alertEl = document.getElementById('usageAlert');
+  alertEl.className = 'usage-alert ' + alert.cls;
+  document.getElementById('alertIcon').textContent  = alert.icon;
+  document.getElementById('alertTitle').textContent = alert.title;
+  document.getElementById('alertMsg').textContent   = alert.msg;
+
+  // Excuse
+  document.getElementById('excuseText').textContent = excuse;
+
+  // Badges
+  const lbCls = ['badge-green','badge-orange','badge-red','badge-purple'][currentLevel];
+  document.getElementById('levelBadge').className   = 'badge ' + lbCls;
+  document.getElementById('levelBadge').textContent = level;
+
+  const urgLabels = ['😌 余裕','😅 注意','😰 ヤバい','💀 詰んでる'];
+  const urgCls    = ['badge-green','badge-orange','badge-red','badge-purple'][urgency];
+  document.getElementById('urgencyBadge').className   = 'badge ' + urgCls;
+  document.getElementById('urgencyBadge').textContent = urgLabels[urgency];
+
+  // Risk bar
+  document.getElementById('riskPct').textContent    = risk + '%';
+  document.getElementById('riskPct').style.color    = riskColor;
+  document.getElementById('riskEmoji').textContent  = riskCfg.emoji + (risk >= 80 ? '💀' : '');
+  const bar = document.getElementById('riskBar');
+  // Reset then animate
+  bar.style.transition = 'none';
+  bar.style.width = '0%';
+  bar.offsetHeight; // reflow
+  bar.style.transition = 'width 1.2s cubic-bezier(0.22, 1, 0.36, 1), background 1s';
+  bar.style.width = risk + '%';
+  bar.style.background = `linear-gradient(90deg, ${riskColor}, ${riskColor}bb)`;
+
+  document.getElementById('riskComment').textContent = '💡 ' + riskCfg.comment;
+
+  // Tips
+  const tipsEl = document.getElementById('riskTips');
+  tipsEl.innerHTML = riskCfg.tips.map(t => `<span class="risk-tip">✓ ${t}</span>`).join('');
+
+  // Q&A
+  const tbody = document.getElementById('qaBody');
+  tbody.innerHTML = '';
+  if (recQA.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#555;padding:20px;">データなし（この組み合わせは自分でアドリブを！）</td></tr>';
+  } else {
+    recQA.forEach((qa, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="qa-num">${i + 1}</td>
+        <td><span class="tsukkomi-text">${qa.t}</span></td>
+        <td class="kaeshi-text">${qa.k}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Sensei
+  document.getElementById('senseiText').textContent = sensei;
+
+  // Footer
+  document.getElementById('footerCount').textContent =
+    `累計生成回数: ${cnt} 回  |  このツールの使用は自己責任でお願いします 😅  |  AI言い訳ジェネレーター v1.0`;
+
+  // Show output
+  const btn = document.getElementById('genBtn');
+  btn.classList.add('spinning');
+  setTimeout(() => btn.classList.remove('spinning'), 500);
+
+  const output = document.getElementById('output');
+  output.classList.add('visible');
+  setTimeout(() => {
+    output.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
+}
+
+/* =====================================================
+   COPY
+   ===================================================== */
+function copyExcuse() {
+  const text = document.getElementById('excuseText').textContent;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(flashCopy);
+  } else {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    flashCopy();
+  }
+}
+function flashCopy() {
+  const btn = document.getElementById('copyBtn');
+  btn.textContent = '✅ コピーしました！';
+  btn.classList.add('copied');
+  setTimeout(() => {
+    btn.textContent = '📋 コピーする';
+    btn.classList.remove('copied');
+  }, 2200);
+}
+
+/* =====================================================
+   SCROLL TOP
+   ===================================================== */
+window.addEventListener('scroll', () => {
+  const btn = document.getElementById('scrollTopBtn');
+  btn.classList.toggle('show', window.scrollY > 300);
+});
+
+/* Init */
+setLevel(1);
+</script>
+</body>
+</html>
