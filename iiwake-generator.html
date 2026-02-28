@@ -499,6 +499,149 @@
     }
     .scroll-top:hover { transform: scale(1.1); }
     .scroll-top.show { display: flex; }
+
+    /* ====== API SETTINGS CARD ====== */
+    .api-settings-card {
+      background: var(--card);
+      border: 1.5px solid #2a2a50;
+      border-radius: 18px;
+      padding: 18px 20px;
+      margin-bottom: 18px;
+    }
+    .api-settings-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+    }
+    .api-settings-title {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--accent3);
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .api-settings-arrow {
+      font-size: 0.75rem;
+      color: var(--muted);
+      transition: transform 0.25s;
+    }
+    .api-settings-arrow.open { transform: rotate(90deg); }
+    .api-settings-body {
+      display: none;
+      margin-top: 14px;
+    }
+    .api-settings-body.open { display: block; }
+    .api-key-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .api-key-input {
+      flex: 1;
+      background: #09091a;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 0.85rem;
+      font-family: monospace;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .api-key-input:focus { border-color: var(--accent3); }
+    .api-key-input::placeholder { color: #444; }
+    .api-key-toggle {
+      background: #1a1a35;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      padding: 10px 12px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .api-key-toggle:hover { color: var(--text); border-color: var(--accent3); }
+    .api-key-save {
+      background: linear-gradient(135deg, #1a3a6a, #0d2244);
+      border: 1.5px solid var(--accent3);
+      border-radius: 8px;
+      color: var(--accent3);
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 10px 16px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .api-key-save:hover { background: linear-gradient(135deg, #224488, #102a55); }
+    .api-key-status {
+      margin-top: 8px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .api-key-status .set { color: var(--green); }
+    .api-key-status .unset { color: #555; }
+    .api-key-hint {
+      margin-top: 8px;
+      font-size: 0.75rem;
+      color: #555;
+      line-height: 1.6;
+    }
+
+    /* ====== RESET BUTTON ====== */
+    .reset-count-btn {
+      margin-top: 10px;
+      background: #1a0a0a;
+      border: 1.5px solid #4a1a1a;
+      border-radius: 8px;
+      color: #cc6666;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .reset-count-btn:hover { background: #280a0a; border-color: var(--red); color: var(--red); }
+
+    /* ====== GENERATE BTN LOADING STATE ====== */
+    .generate-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+    .generate-btn.loading::after {
+      content: '';
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .api-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.7rem;
+      padding: 2px 9px;
+      border-radius: 20px;
+      background: rgba(74,154,245,0.12);
+      border: 1px solid var(--accent3);
+      color: var(--accent3);
+      font-weight: 700;
+    }
   </style>
 </head>
 <body>
@@ -517,6 +660,35 @@
 </div>
 
 <div class="container">
+
+  <!-- API SETTINGS CARD -->
+  <div class="api-settings-card">
+    <div class="api-settings-header" onclick="toggleApiSettings()">
+      <div class="api-settings-title">
+        🔑 AI API 設定
+        <span id="apiStatusBadge" class="api-badge" style="display:none">✓ API接続済み</span>
+      </div>
+      <span class="api-settings-arrow" id="apiArrow">▶</span>
+    </div>
+    <div class="api-settings-body" id="apiSettingsBody">
+      <div class="api-key-row">
+        <input type="password" id="apiKeyInput" class="api-key-input"
+               placeholder="sk-ant-api03-..." autocomplete="off">
+        <button class="api-key-toggle" onclick="toggleKeyVisibility()" title="表示/非表示">👁</button>
+        <button class="api-key-save" onclick="saveKey()">💾 保存</button>
+      </div>
+      <div class="api-key-status">
+        <span id="apiKeyStatusText" class="unset">⚪ APIキー未設定（ローカルDBで動作）</span>
+      </div>
+      <div class="api-key-hint">
+        ※ APIキーは Claude (Anthropic) のものを使用します。キーはブラウザの localStorage に保存されます。<br>
+        ※ キーが設定されると毎回ユニークな言い訳を AI が生成します。
+      </div>
+      <hr style="border-color:#1a1a35; margin: 12px 0;">
+      <div style="font-size:0.82rem; color:#888; margin-bottom:6px;">📊 使用回数管理</div>
+      <button class="reset-count-btn" onclick="resetCount()">🔄 言い訳カウンターをリセット</button>
+    </div>
+  </div>
 
   <!-- INPUT CARD -->
   <div class="card">
@@ -1157,6 +1329,52 @@ function updateUrgencyLabel() {
 }
 
 /* =====================================================
+   API KEY MANAGEMENT
+   ===================================================== */
+function getApiKey() { return localStorage.getItem('iiwake_api_key') || ''; }
+
+function saveKey() {
+  const val = document.getElementById('apiKeyInput').value.trim();
+  if (val) {
+    localStorage.setItem('iiwake_api_key', val);
+  } else {
+    localStorage.removeItem('iiwake_api_key');
+  }
+  updateApiKeyStatus();
+  const btn = document.querySelector('.api-key-save');
+  const orig = btn.textContent;
+  btn.textContent = '✅ 保存しました';
+  setTimeout(() => { btn.textContent = orig; }, 1800);
+}
+
+function updateApiKeyStatus() {
+  const key = getApiKey();
+  const statusEl = document.getElementById('apiKeyStatusText');
+  const badgeEl  = document.getElementById('apiStatusBadge');
+  if (key) {
+    statusEl.textContent = '🟢 APIキー設定済み（AIで生成します）';
+    statusEl.className = 'set';
+    badgeEl.style.display = 'inline-flex';
+  } else {
+    statusEl.textContent = '⚪ APIキー未設定（ローカルDBで動作）';
+    statusEl.className = 'unset';
+    badgeEl.style.display = 'none';
+  }
+}
+
+function toggleApiSettings() {
+  const body  = document.getElementById('apiSettingsBody');
+  const arrow = document.getElementById('apiArrow');
+  const open  = body.classList.toggle('open');
+  arrow.classList.toggle('open', open);
+}
+
+function toggleKeyVisibility() {
+  const input = document.getElementById('apiKeyInput');
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+/* =====================================================
    USAGE TRACKING
    ===================================================== */
 function getCount() { return parseInt(localStorage.getItem('iiwake_cnt') || '0'); }
@@ -1164,6 +1382,13 @@ function incCount() {
   const n = getCount() + 1;
   localStorage.setItem('iiwake_cnt', n);
   return n;
+}
+function resetCount() {
+  localStorage.setItem('iiwake_cnt', '0');
+  const btn = document.querySelector('.reset-count-btn');
+  const orig = btn.textContent;
+  btn.textContent = '✅ リセットしました！';
+  setTimeout(() => { btn.textContent = orig; }, 1800);
 }
 function getAlertData(n) {
   if (n <= 3)  return { cls: 'safe',   icon: '✅', title: `使用回数 ${n} 回 ─ 問題なし`,      msg: '健全な使用状況です。上手に活用してください。' };
@@ -1173,19 +1398,94 @@ function getAlertData(n) {
 }
 
 /* =====================================================
+   API GENERATION
+   ===================================================== */
+const URGENCY_LABELS = ['余裕（時間的・精神的にゆとりがある）', 'ちょいヤバ（少し焦っている）', 'かなりヤバ（かなり追い詰められている）', '詰んでる（絶体絶命）'];
+
+async function generateWithAPI(type, recipient, urgency, level) {
+  const apiKey = getApiKey();
+  const urgLabel = URGENCY_LABELS[urgency];
+  const prompt = `あなたは言い訳の専門家です。以下の条件で、日本語の言い訳文を1つだけ生成してください。
+
+【条件】
+- 言い訳の種類: ${type}
+- 言い訳する相手: ${recipient}
+- 緊急度: ${urgLabel}
+- 言い訳レベル: ${level}
+  - 正直系: 実際にありそうな、誠実で信憑性の高い言い訳
+  - ちょっと盛り: 少し誇張しているが、まだありえる範囲の言い訳
+  - かなり盛り: かなり誇張していて、追及されると危ない言い訳
+  - フィクション級: 創作に近い、ドラマチックで大げさな言い訳
+
+【出力形式】
+- 言い訳の文章のみを出力してください（説明・前置き・箇条書き不要）
+- 文体は相手に合わせて適切な敬語レベルで書いてください
+- 200〜400文字程度で、自然な日本語で書いてください
+- 毎回必ず違う内容・表現で生成してください`;
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'content-type': 'application/json',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 600,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error?.message || `APIエラー (${response.status})`);
+  }
+
+  const data = await response.json();
+  return data.content[0].text.trim();
+}
+
+/* =====================================================
    GENERATE
    ===================================================== */
-function generate() {
+async function generate() {
   const type      = document.getElementById('sel-type').value;
   const recipient = document.getElementById('sel-recipient').value;
   const urgency   = parseInt(document.getElementById('urgency').value);
   const level     = LEVELS[currentLevel];
 
-  // --- Excuse text ---
-  const typeDB = DB[type] || {};
-  const recDB  = typeDB[recipient] || typeDB[Object.keys(typeDB)[0]] || {};
-  const lvlArr = recDB[level] || recDB[Object.keys(recDB)[0]] || ["申し訳ございません。やむを得ない事情がございました。"];
-  const excuse = lvlArr[Math.floor(Math.random() * lvlArr.length)];
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true;
+  btn.classList.add('loading');
+  btn.textContent = '🤖 生成中...';
+
+  let excuse;
+  const apiKey = getApiKey();
+
+  try {
+    if (apiKey) {
+      excuse = await generateWithAPI(type, recipient, urgency, level);
+    } else {
+      // Fallback: local DB
+      await new Promise(r => setTimeout(r, 300)); // slight delay for UX consistency
+      const typeDB = DB[type] || {};
+      const recDB  = typeDB[recipient] || typeDB[Object.keys(typeDB)[0]] || {};
+      const lvlArr = recDB[level] || recDB[Object.keys(recDB)[0]] || ["申し訳ございません。やむを得ない事情がございました。"];
+      excuse = lvlArr[Math.floor(Math.random() * lvlArr.length)];
+    }
+  } catch (e) {
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    btn.textContent = '✨ 言い訳を生成する';
+    alert(`生成に失敗しました:\n${e.message}\n\nAPIキーを確認してください。`);
+    return;
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    btn.textContent = '✨ 言い訳を生成する';
+  }
 
   // --- Risk ---
   const riskCfg = RISK[level];
@@ -1271,7 +1571,6 @@ function generate() {
     `累計生成回数: ${cnt} 回  |  このツールの使用は自己責任でお願いします 😅  |  AI言い訳ジェネレーター v1.0`;
 
   // Show output
-  const btn = document.getElementById('genBtn');
   btn.classList.add('spinning');
   setTimeout(() => btn.classList.remove('spinning'), 500);
 
@@ -1320,6 +1619,12 @@ window.addEventListener('scroll', () => {
 
 /* Init */
 setLevel(1);
+updateApiKeyStatus();
+// Restore saved API key to input (masked)
+const _savedKey = getApiKey();
+if (_savedKey) {
+  document.getElementById('apiKeyInput').value = _savedKey;
+}
 </script>
 </body>
 </html>
